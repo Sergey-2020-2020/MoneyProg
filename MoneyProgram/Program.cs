@@ -51,33 +51,61 @@ namespace MoneyProgram
             }
             public Money(Money money)
             {
-                Rate = money.Rate;
-                Identifier = money.Identifier;
-                MoneyName = money.MoneyName;
-                Count = money.Count;
+                if (money == null)
+                {
+                    Console.WriteLine("Невозможно создать новый объект класса Money");
+                }
+                else {
+                    Rate = money.Rate;
+                    Identifier = money.Identifier;
+                    MoneyName = money.MoneyName;
+                    Count = money.Count;
+                }
+
             }
 
-            public void GetInfo()
+            public string GetInfo()
             {
-                Console.WriteLine(MoneyName + ": Курс = " + Rate + "; Идентификатор = " + Identifier + ".");
+                return MoneyName + ": Курс = " + Rate + "; Идентификатор = " + Identifier + ".";
             }
-            public void SetCount(double count)
+            public void SetCount(string count)
             {
-                Count = count;
+                if(new Regex(@"^(\d+(?:\,\d+)?){1}$").Match(count).Success)
+                Count = Convert.ToDouble(count);
+                else
+                {
+                    Console.WriteLine("Не удалось установить количество для валюты " + this.Identifier);
+                }
             }
-            public void SetRate(double rate)
+            public void SetRate(string rate)
             {
-                Rate = rate;
+                if (new Regex(@"\d+\,\d+").Match(rate).Success)
+                    Rate = Convert.ToDouble(rate);
+                else
+                {
+                    Console.WriteLine("Введеное значение для изменения параметра Rate неправильное. (идентификатор: {0})", this.Identifier);
+                }
             }
             public void SetIdentifier(string identifier)
             {
+                if (identifier == "" || identifier == null)
+                {
+                    Console.WriteLine("Невозможно установить новое значение для идентификатора " + this.Identifier + " -> "+ identifier);
+                }
+                else { 
+                    //todo Проверка на уникальность идентификатора
                 Identifier = identifier;
+                }
             }
 
             #region OperatorsOverload
 
             public static bool operator ==(Money money1, Money money2)
             {
+                if (ReferenceEquals(money1, null) && ReferenceEquals(money2, null))
+                    return true;
+                if (ReferenceEquals(money1, null) || ReferenceEquals(money2, null))
+                    return false;
                 if (money1.Rate * money1.Count == money2.Rate * money2.Count)
                     return true;
                 else
@@ -85,6 +113,8 @@ namespace MoneyProgram
             }
             public static bool operator !=(Money money1, Money money2)
             {
+                if (money1 == null || money2 == null)
+                    return !(money1 == money2);
                 if (money1.Rate * money1.Count != money2.Rate * money2.Count)
                     return true;
                 else
@@ -92,6 +122,8 @@ namespace MoneyProgram
             }
             public static bool operator >(Money money1, Money money2)
             {
+                if (money1 == null || money2 == null)
+                    return false;
                 if (money1.Rate * money1.Count > money2.Rate * money2.Count)
                     return true;
                 else
@@ -99,6 +131,8 @@ namespace MoneyProgram
             }
             public static bool operator <(Money money1, Money money2)
             {
+                if (money1 == null || money2 == null)
+                    return false;
                 if (money1.Rate * money1.Count < money2.Rate * money2.Count)
                     return true;
                 else
@@ -106,6 +140,8 @@ namespace MoneyProgram
             }
             public static bool operator >=(Money money1, Money money2)
             {
+                if (money1 == null || money2 == null)
+                    return false;
                 if (money1.Rate * money1.Count >= money2.Rate * money2.Count)
                     return true;
                 else
@@ -113,6 +149,8 @@ namespace MoneyProgram
             }
             public static bool operator <=(Money money1, Money money2)
             {
+                if (money1 == null || money2 == null)
+                    return false;
                 if (money1.Rate * money1.Count <= money2.Rate * money2.Count)
                     return true;
                 else
@@ -120,11 +158,15 @@ namespace MoneyProgram
             }
             public static Money operator +(Money money1, Money money2)
             {
+                if (money1 == null || money2 == null)
+                    return null;
                 money1.Count = (money1.Rate * money1.Count + money2.Rate * money2.Count) / money1.Rate;
                 return money1;
             }
             public static Money operator -(Money money1, Money money2)
             {
+                if (money1 == null || money2 == null)
+                    return null;
                 money1.Count = (money1.Rate * money1.Count - money2.Rate * money2.Count) / money1.Rate;
                 return money1;
             }
@@ -192,14 +234,30 @@ namespace MoneyProgram
         {
             foreach (var money in currencyFund)
             {
-                money.GetInfo();
+                Console.WriteLine(money.GetInfo());
             }
         }
         //Функция для показа помощи...
         static public void ShowHelp()
         {
             Console.WriteLine("--------------------------------------------------------");
-            Console.WriteLine("Тут описание как работать в программе и какие использовать команды, но мне лень его писать...");
+            Console.WriteLine("Уникальные действия:");
+            Console.WriteLine("help - вызвать текст помощи, если вы это читаете, значит вы его уже вызвали");
+            Console.WriteLine("showall - показывает информацию обо всей валюте");
+            Console.WriteLine("clear - очищает консоль.");
+            Console.WriteLine("");
+            Console.WriteLine("Начальные идентификаторы:");
+            Console.WriteLine("? для операторов ставнения (==, !=, >, <, >=, <=)");
+            Console.WriteLine("math для математических преобразований (+, -)");
+            Console.WriteLine("");
+            Console.WriteLine("Для ? и math запись ведется следующим образом:");
+            Console.WriteLine("\"?/math 12.12D ==/+ 240R\", где первая часть - идентификатор вида действия, вторая и четвёртая части это деньги вида Число + Идентификатор " +
+                              "(число может быть с точкой, но после точки обязательно должна идти цифра) и третья часть это оператор (указан в скобках для начальных идентификаторов выше)");
+            Console.WriteLine("");
+            Console.WriteLine("set для присвоения новых значения (Id, Rate)");
+            Console.WriteLine("Примеры: \"set Rate R 10,12\" (запятая обязательна), \"set Id R Ruble\", первая часть - идентификатор вида действия, " +
+                              "вторая - изменяемое поле, третья - идентификатор валюты, четвертая - новое значение.");
+
             Console.WriteLine("--------------------------------------------------------");
         }
         //Функция для распознования комманд
@@ -306,9 +364,9 @@ namespace MoneyProgram
                 var count = strArr[1];
                 var identifier = strArr[2];
                 var money = currencyFund.FirstOrDefault(m => m.Identifier == identifier);
-                if(ReferenceEquals(money, null))
+                if(money == null)
                     return null;
-                money.SetCount(Convert.ToDouble(count));
+                money.SetCount(count);
                 return money;
             }
 
@@ -355,40 +413,38 @@ namespace MoneyProgram
         static public bool ValidateMoney(Money m1, Money m2)
         {
             // Вывод сообщений об ошибке 
-            // NOTE: Сравнение по типу money1 == null не работает... Он же переопределён...
-            if (ReferenceEquals(m1, null))
+            bool isError = false;
+            if (m1 == null)
             {
                 Console.WriteLine("Не удалось определить первое значение.");
-                return true;
+                isError = true;
             }
 
-            if (ReferenceEquals(m2, null))
+            if (m2 == null)
             {
                 Console.WriteLine("Не удалось определить второе значение.");
-                return true;
+                isError = true;
             }
+
+            if (isError)
+                return true;
             return false;
         }
 
         static public void SetMoneySettings(string identifier, string setting, string newSet)
         {
             var money1 = currencyFund.Where(m => m.Identifier == identifier).FirstOrDefault();
-            if (money1.Equals(null)) {
+            if (money1 == null) {
                 Console.WriteLine("Не удалось определить тип валюты.");
                 return;
-                }
+            }
             switch (setting)
             {
                 case "Id":
                     money1.SetIdentifier(newSet);
                     break;
                 case "Rate":
-                    if(new Regex(@"\d+\,\d+").Match(newSet).Success)
-                    money1.SetRate(Convert.ToDouble(newSet));
-                    else
-                    {
-                        Console.WriteLine("Введеное значение для изменения параметра Rate неправильное.");
-                    }
+                    money1.SetRate(newSet);
                     break;
                 default:
                     Console.WriteLine("Не удалось определить тип настройки.");
@@ -396,28 +452,7 @@ namespace MoneyProgram
             }
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        #region SomeMemes
+        #region . 
 
         static public void Goose()
         {
